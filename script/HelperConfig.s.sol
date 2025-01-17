@@ -1,6 +1,7 @@
 pragma solidity ^0.8.24;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
+import {EntryPoint} from "@account-abstraction/contracts/core/EntryPoint.sol";
 
 contract HelperConfig is Script {
     error HelperConfig__InvalidChainId();
@@ -24,11 +25,11 @@ contract HelperConfig is Script {
         networkConfigs[ZKSYNC_SEPOLIA_CHAIN_ID] = getZkSyncSepoliaConfig();
     }
 
-    function getConfig() public view returns (NetworkConfig memory) {
+    function getConfig() public returns (NetworkConfig memory) {
         return getConfigByChainId(block.chainid);
     }
 
-    function getConfigByChainId(uint256 chainId) public view returns (NetworkConfig memory) {
+    function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
         if (chainId == ANVIL_CHAIN_ID) {
             return getAnvilEthConfig();
         } else if (networkConfigs[chainId].account != address(0)) {
@@ -46,11 +47,17 @@ contract HelperConfig is Script {
         return NetworkConfig({entryPoint: address(0), account: TEST_ACCOUNT});
     }
 
-    function getAnvilEthConfig() public view returns (NetworkConfig memory) {
+    function getAnvilEthConfig() public returns (NetworkConfig memory) {
         if (localNetworkConfig.account != address(0)) {
             return localNetworkConfig;
         }
         // Deploy mocks here
-        return NetworkConfig({entryPoint: address(0), account: ANVIL_ACCOUNT});
+        vm.startBroadcast();
+        EntryPoint entryPoint = new EntryPoint();
+        vm.stopBroadcast();
+
+        localNetworkConfig = NetworkConfig({entryPoint: address(entryPoint), account: ANVIL_ACCOUNT});
+
+        return localNetworkConfig;
     }
 }
