@@ -9,14 +9,14 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 contract SendPackedUserOp is Script {
     function run() external {}
 
-    function generateSignedUserOp(bytes memory callData, HelperConfig.NetworkConfig memory config)
-        public
-        view
-        returns (PackedUserOperation memory)
-    {
+    function generateSignedUserOp(
+        bytes memory callData,
+        HelperConfig.NetworkConfig memory config,
+        address minimalAccount
+    ) public view returns (PackedUserOperation memory) {
         //Generate the unsigned data
-        uint256 nonce = vm.getNonce(config.account);
-        PackedUserOperation memory userOp = _generateUnsignedUserOp(config.account, nonce, callData);
+        uint256 nonce = IEntryPoint(config.entryPoint).getNonce(minimalAccount, 0);
+        PackedUserOperation memory userOp = _generateUnsignedUserOp(minimalAccount, nonce, callData);
 
         // Get userOpHash
         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);

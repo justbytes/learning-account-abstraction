@@ -53,10 +53,10 @@ contract HelperConfig is Script {
         }
         // Deploy mocks here
         vm.startBroadcast();
-        EntryPoint entryPoint = new EntryPoint();
+        EntryPoint anvilEntryPoint = new EntryPoint();
         vm.stopBroadcast();
 
-        localNetworkConfig = NetworkConfig({entryPoint: address(entryPoint), account: ANVIL_ACCOUNT});
+        localNetworkConfig = NetworkConfig({entryPoint: address(anvilEntryPoint), account: ANVIL_ACCOUNT});
 
         return localNetworkConfig;
     }

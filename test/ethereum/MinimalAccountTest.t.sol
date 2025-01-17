@@ -21,6 +21,7 @@ contract MinimalAccountTest is Test {
     SendPackedUserOp public sendPackedUserOp;
 
     uint256 public constant USDC_MINT_AMOUNT = 100;
+    address public randomUser = makeAddr("randomUser");
 
     function setUp() public {
         deployer = new DeployMinimalAccount();
@@ -65,11 +66,55 @@ contract MinimalAccountTest is Test {
         bytes memory executeCallData = abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, funcData);
 
         PackedUserOperation memory packedUserOp =
-            sendPackedUserOp.generateSignedUserOp(executeCallData, helperConfig.getConfig());
+            sendPackedUserOp.generateSignedUserOp(executeCallData, helperConfig.getConfig(), address(minimalAccount));
         bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
         // Act
         address actualAddress = ECDSA.recover(userOpHash.toEthSignedMessageHash(), packedUserOp.signature);
         // Assert
         assertEq(actualAddress, minimalAccount.owner());
+    }
+
+    function test_ValidationOfUserOp() public {
+        // Arrange
+        assertEq(usdc.balanceOf(address(minimalAccount)), 0);
+        address dest = address(usdc);
+        uint256 value = 0;
+        bytes memory funcData = abi.encodeWithSelector(usdc.mint.selector, address(minimalAccount), USDC_MINT_AMOUNT);
+        bytes memory executeCallData = abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, funcData);
+        uint256 missingAccountFunds = 1e18;
+
+        PackedUserOperation memory packedUserOp =
+            sendPackedUserOp.generateSignedUserOp(executeCallData, helperConfig.getConfig(), address(minimalAccount));
+        bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
+        // Act
+        vm.prank(helperConfig.getConfig().entryPoint);
+        uint256 validationData = minimalAccount.validateUserOp(packedUserOp, userOpHash, missingAccountFunds);
+        // Assert
+        assertEq(validationData, 0);
+    }
+
+    function test_EntryPointCanExecuteCommands() public {
+        // Arrange
+        assertEq(usdc.balanceOf(address(minimalAccount)), 0);
+        address dest = address(usdc);
+        uint256 value = 0;
+        bytes memory funcData = abi.encodeWithSelector(usdc.mint.selector, address(minimalAccount), USDC_MINT_AMOUNT);
+        bytes memory executeCallData = abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, funcData);
+
+        PackedUserOperation memory packedUserOp =
+            sendPackedUserOp.generateSignedUserOp(executeCallData, helperConfig.getConfig(), address(minimalAccount));
+
+        // Ensure the account has enough funds
+        vm.deal(address(minimalAccount), 1e18);
+
+        PackedUserOperation[] memory userOps = new PackedUserOperation[](1);
+        userOps[0] = packedUserOp;
+
+        // Act
+        vm.prank(randomUser);
+        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(userOps, payable(randomUser));
+
+        // Assert
+        assertEq(usdc.balanceOf(address(minimalAccount)), USDC_MINT_AMOUNT);
     }
 }

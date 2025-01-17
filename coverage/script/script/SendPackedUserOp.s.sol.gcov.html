@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - script/script/SendPackedUserOp.s.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">script/script</a> - SendPackedUserOp.s.sol<span style="font-size: 80%;"> (source / <a href="SendPackedUserOp.s.sol.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">95.2&nbsp;%</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">20</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-01-16 18:25:02</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : pragma solidity ^0.8.24;</span>
+<span id="L2"><span class="lineNum">       2</span>              : </span>
+<span id="L3"><span class="lineNum">       3</span>              : import {Script} from &quot;forge-std/Script.sol&quot;;</span>
+<span id="L4"><span class="lineNum">       4</span>              : import {PackedUserOperation} from &quot;@account-abstraction/contracts/interfaces/PackedUserOperation.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>              : import {HelperConfig} from &quot;./HelperConfig.s.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>              : import {IEntryPoint} from &quot;@account-abstraction/contracts/interfaces/IEntryPoint.sol&quot;;</span>
+<span id="L7"><span class="lineNum">       7</span>              : import {MessageHashUtils} from &quot;@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol&quot;;</span>
+<span id="L8"><span class="lineNum">       8</span>              : </span>
+<span id="L9"><span class="lineNum">       9</span>              : contract SendPackedUserOp is Script {</span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">           1 :     function run() external {}</span></span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">           4 :     function generateSignedUserOp(</span></span>
+<span id="L13"><span class="lineNum">      13</span>              :         bytes memory callData,</span>
+<span id="L14"><span class="lineNum">      14</span>              :         HelperConfig.NetworkConfig memory config,</span>
+<span id="L15"><span class="lineNum">      15</span>              :         address minimalAccount</span>
+<span id="L16"><span class="lineNum">      16</span>              :     ) public view returns (PackedUserOperation memory) {</span>
+<span id="L17"><span class="lineNum">      17</span>              :         //Generate the unsigned data</span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           4 :         uint256 nonce = IEntryPoint(config.entryPoint).getNonce(minimalAccount, 0);</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">           4 :         PackedUserOperation memory userOp = _generateUnsignedUserOp(minimalAccount, nonce, callData);</span></span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span>              :         // Get userOpHash</span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">           4 :         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">           4 :         bytes32 digest = MessageHashUtils.toEthSignedMessageHash(userOpHash);</span></span>
+<span id="L24"><span class="lineNum">      24</span>              :         // sign and return the data</span>
+<span id="L25"><span class="lineNum">      25</span>              : </span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">           4 :         uint8 v;</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           4 :         bytes32 r;</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">           4 :         bytes32 s;</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">           4 :         uint256 ANVIL_DEFAULT_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;</span></span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">           4 :         if (block.chainid == 31337) {</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           4 :             (v, r, s) = vm.sign(ANVIL_DEFAULT_KEY, digest);</span></span>
+<span id="L33"><span class="lineNum">      33</span>              :         } else {</span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC tlaBgUNC">           0 :             (v, r, s) = vm.sign(config.account, digest);</span></span>
+<span id="L35"><span class="lineNum">      35</span>              :         }</span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC tlaBgGNC">           4 :         userOp.signature = abi.encodePacked(r, s, v);</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">           4 :         return userOp;</span></span>
+<span id="L38"><span class="lineNum">      38</span>              :     }</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">           1 :     function _generateUnsignedUserOp(address sender, uint256 nonce, bytes memory callData)</span></span>
+<span id="L41"><span class="lineNum">      41</span>              :         public</span>
+<span id="L42"><span class="lineNum">      42</span>              :         pure</span>
+<span id="L43"><span class="lineNum">      43</span>              :         returns (PackedUserOperation memory)</span>
+<span id="L44"><span class="lineNum">      44</span>              :     {</span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">           5 :         uint128 verificationGasLimit = 16777216;</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">           5 :         uint128 callGasLimit = verificationGasLimit;</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">           5 :         uint128 maxPriorityFeePerGas = 256;</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">           5 :         uint128 maxFeePerGas = maxPriorityFeePerGas;</span></span>
+<span id="L49"><span class="lineNum">      49</span>              : </span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">           5 :         return PackedUserOperation({</span></span>
+<span id="L51"><span class="lineNum">      51</span>              :             sender: sender,</span>
+<span id="L52"><span class="lineNum">      52</span>              :             nonce: nonce,</span>
+<span id="L53"><span class="lineNum">      53</span>              :             initCode: hex&quot;&quot;,</span>
+<span id="L54"><span class="lineNum">      54</span>              :             callData: callData,</span>
+<span id="L55"><span class="lineNum">      55</span>              :             accountGasLimits: bytes32(uint256(verificationGasLimit) &lt;&lt; 128 | uint256(callGasLimit)),</span>
+<span id="L56"><span class="lineNum">      56</span>              :             preVerificationGas: verificationGasLimit,</span>
+<span id="L57"><span class="lineNum">      57</span>              :             gasFees: bytes32(uint256(maxPriorityFeePerGas) &lt;&lt; 128 | uint256(maxFeePerGas)),</span>
+<span id="L58"><span class="lineNum">      58</span>              :             paymasterAndData: hex&quot;&quot;,</span>
+<span id="L59"><span class="lineNum">      59</span>              :             signature: hex&quot;&quot;</span>
+<span id="L60"><span class="lineNum">      60</span>              :         });</span>
+<span id="L61"><span class="lineNum">      61</span>              :     }</span>
+<span id="L62"><span class="lineNum">      62</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
